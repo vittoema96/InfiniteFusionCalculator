@@ -3,7 +3,6 @@ import sys
 from itertools import combinations
 
 import requests
-import tqdm
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QFontDatabase, QFont
 from PyQt6.QtWidgets import QComboBox, QVBoxLayout, QPushButton, QListWidget, QLabel, QWidget, QHBoxLayout, \
@@ -190,7 +189,7 @@ class _IFFTBaseTab(QWidget):
         urls_ab, urls_ba = utils.get_fusion_urls(pkmn1, pkmn2)
 
         self.output_layout.addStretch()
-        for urls in tqdm.tqdm([urls_ab, urls_ba]):
+        for urls in [urls_ab, urls_ba]:
             grid_container = QWidget()
             grid_container.setObjectName('evoline')
             grid_container.setStyleSheet('.QWidget#evoline{'
