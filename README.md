@@ -105,6 +105,11 @@ Then run
 [PokeAPI](https://pokeapi.co/) was used to gather data about pokemon, such as 
 minimum and maximum levels, typings, evolution lines and stats.  
 
+#### Stats and Types
+
+Stats are calculated as stated here:  https://infinitefusion.fandom.com/wiki/Pok%C3%A9mon_Fusion#Stats  
+Typing takes into account this: https://infinitefusion.fandom.com/wiki/Pok%C3%A9mon_Fusion#Typing
+
 ## Vanilla sprites
 Pokemon sprites are dynamically downloaded from here:   
 `https://img.pokemondb.net/sprites/black-white/normal/<pokemon_name>.png`  
