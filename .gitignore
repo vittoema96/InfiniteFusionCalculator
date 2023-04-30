@@ -1,3 +1,4 @@
 build/
 .idea/
 IFFT.spec
+dist/IFFT.zip

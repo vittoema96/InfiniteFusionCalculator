@@ -78,6 +78,8 @@ If you edited the program and want to rebuild the .exe read  [Rebuild .exe](#reb
 ## App .exe <a id="exe"></a>
 If your only goal is to run the app, what you really need is to download 
 the [dist/IFFT/](dist/IFFT/) folder.  
+You can also download a .zip from [here](https://mega.nz/file/VY8imSAK#h8pCk95VKGGIYRWXhQ3OmOPoFYlWjyoKarlRJJLkVCE).  
+
 Once downloaded, run the `IFFT.exe` file that you'll find inside.
 
 ### Rebuild .exe <a id="rebuild_exe"></a>

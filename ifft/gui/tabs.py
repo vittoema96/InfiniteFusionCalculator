@@ -1,6 +1,7 @@
 import logging
 import sys
 from itertools import combinations
+from random import Random
 
 import requests
 from PyQt6.QtCore import Qt
@@ -244,9 +245,10 @@ class _SingleTab(_IFFTBaseTab):
         self.info_box = QVBoxLayout()
         font = QFont(self.families[0], 12)
 
-        info_label = QLabel("INFO")
+        info_label = QLabel("<b>INFO</b>")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_message = QLabel("To keep the application light-weight, "
+        info_message = QLabel("You can see typing and stats of a Pokemon hovering it with the mouse.\n\n"
+                              "To keep the application light-weight, "
                               "the sprites are downloaded on every fusion request.")
         info_message.setWordWrap(True)
         info_label.setFont(font)
@@ -254,8 +256,8 @@ class _SingleTab(_IFFTBaseTab):
         self.info_box.addWidget(info_label)
         self.info_box.addWidget(info_message)
 
-        self.sprite1, self.cbox1 = self.init_input()
-        self.sprite2, self.cbox2 = self.init_input()
+        self.sprite1, self.cbox1, self.random1 = self.init_input()
+        self.sprite2, self.cbox2, self.random2 = self.init_input()
 
         self.fuse_button = QPushButton("Fuse")
         self.fuse_button.pressed.connect(self.update)
@@ -265,9 +267,11 @@ class _SingleTab(_IFFTBaseTab):
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.sprite1)
         self.input_layout.addWidget(self.cbox1)
+        self.input_layout.addWidget(self.random1)
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.sprite2)
         self.input_layout.addWidget(self.cbox2)
+        self.input_layout.addWidget(self.random2)
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.fuse_button)
         self.input_layout.addStretch()
@@ -293,7 +297,19 @@ class _SingleTab(_IFFTBaseTab):
             sprite,
             utils.get_sprite_url(cbox.currentText())
         )
-        return sprite, cbox
+
+        def get_random():
+            items_n = cbox.count()
+            idx = Random().randint(0, items_n-1)
+            cbox.setCurrentIndex(idx)
+            self.set_pixmap_from_url(
+                sprite,
+                utils.get_sprite_url(cbox.currentText())
+            )
+
+        random = QPushButton('Random')
+        random.clicked.connect(get_random)
+        return sprite, cbox, random
 
     def update(self):
         pkmn1 = self.cbox1.currentText()
@@ -332,6 +348,16 @@ class _BatchTab(_IFFTBaseTab):
         self.plist = QListWidget()
         self.add.pressed.connect(self.update_list)
 
+        self.random = QPushButton("Add Random")
+
+        def get_random():
+            items_n = self.cbox.count()
+            idx = Random().randint(0, items_n-1)
+            self.cbox.setCurrentIndex(idx)
+            self.update_list()
+
+        self.random.clicked.connect(get_random)
+
         self.remove = QPushButton("Remove")
         self.remove.pressed.connect(self.remove_from_list)
 
@@ -343,6 +369,7 @@ class _BatchTab(_IFFTBaseTab):
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.cbox)
         self.input_layout.addWidget(self.add)
+        self.input_layout.addWidget(self.random)
         self.input_layout.addWidget(self.remove)
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.plist)
