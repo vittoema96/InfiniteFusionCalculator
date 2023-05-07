@@ -37,7 +37,7 @@ def get_fusion_urls(name1: str, name2: str) -> \
     result_ba = []
     for i, a in enumerate(l1):
         for b in l2:
-            if min(a.max_level, b.max_level) - max(a.min_level, b.min_level) > 0:
+            if min(a.max_level, b.max_level) - max(a.min_level, b.min_level) >= 0:
                 aid = get_id_by_name(a.name)
                 bid = get_id_by_name(b.name)
                 result_ab.append((

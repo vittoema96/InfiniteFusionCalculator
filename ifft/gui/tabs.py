@@ -89,13 +89,16 @@ class _IFFTBaseTab(QWidget):
             n = url.split("/")[-1].split('.')[0]
 
             if response.status_code == 404:
-                response = requests.get(url.replace("main/CustomBattlers", "master/Battlers"))
-            if response.status_code == 404:
-                response = requests.get(url.replace("main/CustomBattlers", f"master/Battlers/{n}"))
-            if response.status_code == 404:
-                response = requests.get(url.replace("main/CustomBattlers",
-                                                    f"master/Battlers/{n}")
-                                           .replace("custom", "autogen"))
+                if 'black-white' in url:
+                    response = requests.get(url.replace("black-white", "sun-moon"))
+                else:
+                    response = requests.get(url.replace("main/CustomBattlers", "master/Battlers"))
+                    if response.status_code == 404:
+                        response = requests.get(url.replace("main/CustomBattlers", f"master/Battlers/{n}"))
+                    if response.status_code == 404:
+                        response = requests.get(url.replace("main/CustomBattlers",
+                                                            f"master/Battlers/{n}")
+                                                   .replace("custom", "autogen"))
 
             logging.info(f"Final url: {url.split('Aegide/')[-1]}")
 
