@@ -1,4 +1,4 @@
-# InfiniteFusionFamilyTree
+# InfiniteFusionCalculator by vittoema96
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -26,7 +26,7 @@ It shows full evolution lines of fusions between Pokemon.
 
 ## Example <a id="example"></a>
 ### Fearow + Ekans
-![Fearow + Ekans](ifft/example_fearow_ekans.jpg)  
+![Fearow + Ekans](ifc/example_fearow_ekans.jpg)  
 ### Fearow evolution line   
 - Spearow [1-19] 
 - Fearow [20-100]  
@@ -47,7 +47,7 @@ This tooltip will display:
 - The type (or types) of the Fusion
 - The stats of the Fusion  
 
-![Fearow + Ekans](ifft/example_info.jpg)  
+![Fearow + Ekans](ifc/example_info.jpg)  
 
 
 ## Modes <a id="modes"></a>
@@ -66,7 +66,7 @@ Also, <b>adding Eevee</b> or any of the Eeveelutions will also <b>increment the 
 due to having 9 * <number of stages in the evolution tree of Fusion Pokemon #2> sprites to download for
 every fusion evoline that includes Eevee (or the Eeveelution).
 
-![Fearow + Ekans](ifft/example_batch.jpg)  
+![Fearow + Ekans](ifc/example_batch.jpg)  
 
 # 3. Installation <a id="install"></a>
 If you just want to run the program read [App .exe](#exe).  
@@ -77,16 +77,16 @@ If you edited the program and want to rebuild the .exe read  [Rebuild .exe](#reb
 
 ## App .exe <a id="exe"></a>
 If your only goal is to run the app, what you really need is to download 
-the [dist/IFFT/](dist/IFFT/) folder.  
+the [dist/IFC/](dist/IFC/) folder.  
 You can also download a .zip from [here](https://mega.nz/file/VY8imSAK#h8pCk95VKGGIYRWXhQ3OmOPoFYlWjyoKarlRJJLkVCE).  
 
-Once downloaded, run the `IFFT.exe` file that you'll find inside.
+Once downloaded, run the `IFC.exe` file that you'll find inside.
 
 ### Rebuild .exe <a id="rebuild_exe"></a>
-If you are editing the app and want to recompile the `IFFT.exe`,
+If you are editing the app and want to recompile the `IFC.exe`,
 run  
 `python build_exe.py`  
-and the program will be recompiled to an exe inside the [dist/IFFT/](dist/IFFT/) folder using `auto-py-to-exe`.
+and the program will be recompiled to an exe inside the [dist/IFC/](dist/IFC/) folder using `auto-py-to-exe`.
 
 
 ## Python Project <a id="python"></a>
