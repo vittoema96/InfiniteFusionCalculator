@@ -1,4 +1,5 @@
 import json
+import os.path
 from typing import List
 
 import pandas as pd
@@ -6,8 +7,9 @@ from pandas import DataFrame
 
 from data.enums import Type
 from data.pokemon import Pokemon
+from ifc import RESOURCES_PATH
 
-_data: DataFrame = pd.read_csv('data.csv', index_col='ID')
+_data: DataFrame = pd.read_csv(os.path.join(RESOURCES_PATH, 'data.csv'), index_col='ID')
 
 
 def get_names() -> List[str]:

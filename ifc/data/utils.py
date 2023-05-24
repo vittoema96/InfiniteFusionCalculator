@@ -1,9 +1,11 @@
+import os
 from typing import Tuple, List, Optional
 
 from PyQt6.QtGui import QFontDatabase, QFont
 
 from data.pokedex import get_evolution_list
 from data.pokemon import FusedPokemon
+from ifc import FONTS_PATH
 
 """ Short name for the app"""
 SHORTNAME: str = "IFC"
@@ -29,7 +31,7 @@ def get_font(font_size: int = 12,
              bold: bool = False,
              italic: bool = False,
              underline: bool = False) -> QFont:
-    font_id = QFontDatabase.addApplicationFont("pokemon_pixel_font.ttf")
+    font_id = QFontDatabase.addApplicationFont(os.path.join(FONTS_PATH, "pokemon_pixel_font.ttf"))
     assert font_id >= 0, 'Could not find font'
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
 

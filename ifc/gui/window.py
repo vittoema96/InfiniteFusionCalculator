@@ -1,9 +1,11 @@
 import logging
 
+import requests
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMainWindow, QTabWidget
 
 from data import utils
+from gui.dialog import UpdateDialog
 
 from gui.tabs.batch import BatchTab
 from gui.tabs.single import SingleTab
@@ -53,3 +55,14 @@ class IFCWindow(QMainWindow):
 
         # Now show it
         self.show()
+
+        latest_release_response = \
+            requests.get("https://api.github.com/repos/vittoema96/InfiniteFusionCalculator/releases/latest")
+        assert latest_release_response.status_code == 200, "Could not find InfiniteFusionCalculator latest release"
+        latest_version = latest_release_response.json()['name']
+        if latest_version != utils.VERSION:
+            if UpdateDialog(latest_version).exec():
+                print("Success")
+            else:
+                print("FUCK")
+
