@@ -1,4 +1,3 @@
 build/
 .idea/
-IFC.spec
-dist/IFC.zip
+IFC_*.spec
