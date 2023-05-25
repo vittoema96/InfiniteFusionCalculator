@@ -78,8 +78,7 @@ If you edited the program and want to rebuild the .exe read  [Rebuild .exe](#reb
 
 ## App .exe <a id="exe"></a>
 If your only goal is to run the app, what you really need is to download 
-the [dist/IFC/](dist/IFC/) folder.  
-You can also download a .zip from [here](https://mega.nz/file/VY8imSAK#h8pCk95VKGGIYRWXhQ3OmOPoFYlWjyoKarlRJJLkVCE).  
+the [dist/IFC.zip](dist/IFC.zip) folder.  
 
 Once downloaded, run the `IFC.exe` file that you'll find inside.
 
@@ -87,7 +86,8 @@ Once downloaded, run the `IFC.exe` file that you'll find inside.
 If you are editing the app and want to recompile the `IFC.exe`,
 run  
 `python build_exe.py`  
-and the program will be recompiled to an exe inside the [dist/IFC/](/dist/IFC) folder using `auto-py-to-exe`.
+and the program will be recompiled to an exe (and its zip version) inside the [dist/](/dist/) 
+folder using `auto-py-to-exe`.
 
 
 ## Python Project <a id="python"></a>
