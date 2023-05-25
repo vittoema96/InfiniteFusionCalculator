@@ -9,5 +9,6 @@ if __name__ == '__main__':
               '--add-data "./ifc/gui;ifc/gui/" '
               '--add-data "./ifc/resources;ifc/resources/"  '
               '"./ifc/main.py"')
-    with ZipFile(os.path.join('dist', 'IFC.zip'), mode="w") as archive:
-        archive.write(os.path.join('dist', 'IFC.exe'))
+    os.chdir('dist')
+    with ZipFile('IFC.zip', mode="w") as archive:
+        archive.write('IFC.exe')
