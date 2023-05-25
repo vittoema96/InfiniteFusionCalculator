@@ -8,6 +8,7 @@
     - [Modes](#modes)
       - [Single](#single) 
       - [Batch](#batch)
+      - [Type](#type)
 3. [Installation](#install)
    - [App .exe](#exe)
      - [Rebuild .exe](#rebuild_exe)
@@ -52,21 +53,21 @@ This tooltip will display:
 
 ## Modes <a id="modes"></a>
 
-This application has 2 modes:
+This application has 3 modes:
 ### Single <a id="single"></a>
 Performs fusion between two Pokemon as described in the [Example](#example) .
 
 ### Batch <a id="batch"></a>
-Given a list ok pokemon, calculates all the possible pairs and performs fusion between them.   
-
-<b>WARNING</b>  
-This mode tends to download A LOT of sprites, the time it takes <b>grows exponentially</b>
-with the number of Pokemon added to the list.  
-Also, <b>adding Eevee</b> or any of the Eeveelutions will also <b>increment the computing time</b> dramatically, 
-due to having 9 * <number of stages in the evolution tree of Fusion Pokemon #2> sprites to download for
-every fusion evoline that includes Eevee (or the Eeveelution).
+Given a list ok pokemon, calculates all the possible pairs and performs fusion between them.
 
 ![Fearow + Ekans](ifc/resources/images/example_batch.jpg)  
+
+### Type <a id="type"></a>
+Given two types and, optionally, a base pokemon, it will show all possible fusions with that typing (and base pokemon).
+Here you can also order the evolutions by stat. The ordering is done by taking the maximum stat for each fusion evoline.
+Only fusion pokemon matching the required types are taken into account for this calculation.
+![Fearow + Ekans](ifc/resources/images/example_type.jpg)  
+
 
 # 3. Installation <a id="install"></a>
 If you just want to run the program read [App .exe](#exe).  
@@ -86,7 +87,7 @@ Once downloaded, run the `IFC.exe` file that you'll find inside.
 If you are editing the app and want to recompile the `IFC.exe`,
 run  
 `python build_exe.py`  
-and the program will be recompiled to an exe inside the [dist/IFC/](dist/IFC/) folder using `auto-py-to-exe`.
+and the program will be recompiled to an exe inside the [dist/IFC/](/dist/IFC) folder using `auto-py-to-exe`.
 
 
 ## Python Project <a id="python"></a>
