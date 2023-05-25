@@ -39,7 +39,7 @@ def get_pokemon(idx: int = None, name: str = None) -> Pokemon:
 
 
 def get_evolines_by_type(first_type: Type = None, second_type: Type = None) -> List[List[Pokemon]]:
-    must_contain = (f'\["{first_type.name}"' if first_type else "") + \
+    must_contain = (f'\["{first_type.name}"' if first_type and not Type.is_any(first_type) else "") + \
                    (f', "{second_type.name}"\]' if second_type and not Type.is_any(second_type) else "")
     return [
         get_pokemon(json.loads(evo)[0]).evoline

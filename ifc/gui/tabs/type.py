@@ -111,14 +111,11 @@ class TypeTab(IFCBaseTab):
             id_based_on = pokedex.get_id_by_name(self.based_on_cbox.currentText())
 
         is_based_on = True if id_based_on else False
-
-        result_ab = set()
-        result_ba = set()
+        based_on = pokedex.get_pokemon(id_based_on) if is_based_on else None
 
         type_a_heads = []
         type_a_bodies = []
         if is_based_on:
-            based_on = pokedex.get_pokemon(id_based_on)
             if len(based_on.types) > 1:
                 if based_on.types[0] == requested_type_a:
                     type_a_heads = [based_on.evoline]
@@ -136,36 +133,40 @@ class TypeTab(IFCBaseTab):
         type_b_heads = pokedex.get_evolines_by_type(first_type=requested_type_b)
         type_b_bodies = pokedex.get_evolines_by_type(second_type=requested_type_b)
 
-        for evo_head in type_a_heads:
-            for evo_body in type_b_bodies:
-                fusions = utils.get_fusions(evo_head[0].name, evo_body[0].name)
-                for fusion in fusions[0]:
-                    if requested_type_a in fusion.types and requested_type_b in fusion.types:
-                        attr = self.sort_by_cbox.currentText().lower().replace(' ', '_')
-                        result_ab.add(
-                            (
-                                max([f.__getattribute__(attr)
-                                     if requested_type_a in f.types and requested_type_b in f.types
-                                     else 0
-                                     for f in fusions[0]]),
-                                evo_head[0],
-                                evo_body[0]
+        def get_list(heads, bodies, type_a, type_b):
+            result = set()
+            for evo_head in heads:
+                for evo_body in bodies:
+                    fusions = utils.get_fusions(evo_head[0].name, evo_body[0].name)
+                    for fusion in fusions[0]:
+                        if type_a in fusion.types and type_b in fusion.types:
+                            attr = self.sort_by_cbox.currentText().lower().replace(' ', '_')
+                            result.add(
+                                (
+                                    max([f.__getattribute__(attr)
+                                         if type_a in f.types and type_b in f.types
+                                         else 0
+                                         for f in fusions[0]]),
+                                    evo_head[0],
+                                    evo_body[0]
+                                )
                             )
-                        )
-                        break
-        for evo_head in type_b_heads:
-            for evo_body in type_a_bodies:
-                fusions = utils.get_fusions(evo_head[0].name, evo_body[0].name)
-                for fusion in fusions[0]:
-                    if requested_type_a in fusion.types and requested_type_b in fusion.types:
-                        attr = self.sort_by_cbox.currentText().lower().replace(' ', '_')
-                        result_ba.add((max([f.__getattribute__(attr) for f in fusions[0]]),
-                                       evo_head[0],
-                                       evo_body[0]))
-                        break
-        result_ab = list(result_ab)
-        result_ba = list(result_ba)
+                            break
+            return list(result)
+
+        result_ab = get_list(type_a_heads, type_b_bodies, requested_type_a, requested_type_b)
+        result_ba = get_list(type_b_heads, type_a_bodies, requested_type_a, requested_type_b)
         result = result_ba + result_ab
+
+        if is_based_on and Type.is_any(requested_type_b):
+            result_ab2 = get_list([based_on.evoline],
+                                  pokedex.get_evolines_by_type(second_type=requested_type_a),
+                                  requested_type_a, requested_type_b)
+            result_ba2 = get_list(type_a_heads,
+                                  [based_on.evoline],
+                                  requested_type_a, requested_type_b)
+            result += result_ab2 + result_ba2
+
         result.sort(reverse=True, key=lambda v: v[0])
 
         for i, (val, pokemon_1, pokemon_2) in enumerate(result):
