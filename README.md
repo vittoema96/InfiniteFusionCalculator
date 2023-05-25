@@ -76,11 +76,10 @@ If you want to open the project in an IDE read [Python project](#python).
 
 If you edited the program and want to rebuild the .exe read  [Rebuild .exe](#rebuild_exe).  
 
-## App .exe <a id="exe"></a>
+# App .exe <a id="exe"></a>
 If your only goal is to run the app, what you really need is to download 
 the [dist/IFC.zip](dist/IFC.zip) folder.  
-Click [here](https://github.com/vittoema96/InfiniteFusionCalculator/raw/main/dist/IFC.zip) to download the zip.
-
+### *Click [here](https://github.com/vittoema96/InfiniteFusionCalculator/raw/main/dist/IFC.zip) to download the zip.*  
 Once downloaded, run the `IFC.exe` file that you'll find inside.
 
 ### Rebuild .exe <a id="rebuild_exe"></a>
