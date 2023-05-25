@@ -50,4 +50,4 @@ class UpdateDialog(QDialog):
         self.setLayout(self.layout)
 
     def go_to_github(self):
-        webbrowser.open('https://github.com/vittoema96/InfiniteFusionCalculator')
+        webbrowser.open('https://github.com/vittoema96/InfiniteFusionCalculator#exe')
