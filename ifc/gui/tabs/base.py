@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import List
+from typing import List, Optional
 
 from PyQt6 import QtNetwork
 from PyQt6.QtCore import Qt, QByteArray, QUrl
@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QScrollArea, QLay
 
 from data import utils
 from gui.tabs import widgets
-from gui.tabs.widgets import EvolineWidget
+from gui.tabs.widgets import EvolineWidget, FusionWidget
 
 
 class IFCBaseTab(QWidget):
@@ -21,6 +21,8 @@ class IFCBaseTab(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.selected_pokemon = None
 
         self.font = utils.get_font()
         self.bold_font = utils.get_font(bold=True)
@@ -44,7 +46,7 @@ class IFCBaseTab(QWidget):
         output_scroll = QScrollArea()
         # Create the output layout and add it to a QWidget (so we can set the size)
         output_container = QWidget()
-        output_container.setFixedWidth(10 * utils.SPRITE_SIZE)
+        output_container.setFixedWidth(12 * utils.SPRITE_SIZE)
         self.output_layout = QVBoxLayout()
         output_container.setLayout(self.output_layout)
         # Add output container to scroll area and set vertical scrollbar always displaying
@@ -55,6 +57,23 @@ class IFCBaseTab(QWidget):
 
         self.layout.addWidget(input_container)
         self.layout.addWidget(output_scroll)
+
+    def select_pokemon(self, widget: Optional[FusionWidget]):
+        if self.selected_pokemon is not None:
+            self.selected_pokemon.deselect()
+
+        if widget is not None and widget != self.selected_pokemon:
+            self.selected_pokemon = widget
+            self.selected_pokemon.select()
+        else:
+            self.selected_pokemon = None
+
+        for i in range(self.output_layout.count()):
+            child = self.output_layout.itemAt(i)
+            if child.widget() is not None:
+                widget = child.widget()
+                if isinstance(widget, EvolineWidget):
+                    widget.update_tooltips(self.selected_pokemon.fusion if self.selected_pokemon else None)
 
     def set_info_message(self, message: str):
         self._set_message(header='INFO', message=message)
@@ -179,7 +198,7 @@ class IFCBaseTab(QWidget):
         # Create an Evoline widget for each enabled evoline (AB and BA)
         for row, evoline in enumerate(evolines):
             if len(evoline) > 0:
-                evoline_widget = EvolineWidget(evoline)
+                evoline_widget = EvolineWidget(evoline, self.select_pokemon)
                 evoline_widget.fetch_images(self.nam)
                 self.output_layout.addWidget(evoline_widget)
                 self.output_layout.addStretch()

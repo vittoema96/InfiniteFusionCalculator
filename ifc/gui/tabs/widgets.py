@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Callable, Optional
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPainter
 from PyQt6.QtNetwork import QNetworkAccessManager
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QGraphicsColorizeEffect, QGridLayout, QToolTip, \
@@ -54,7 +54,7 @@ class EvolineWidget(CustomWidget):
     The Grid has a grey border and the items are 5 per row.
     """
 
-    def __init__(self, urls: List[FusedPokemon]):
+    def __init__(self, urls: List[FusedPokemon], click_callback: Callable):
         super().__init__()
         # Set name (so that setting StyleSheet does not affect children widgets)
         self.setObjectName('evoline')
@@ -67,7 +67,7 @@ class EvolineWidget(CustomWidget):
         grid = QGridLayout()
         self.fusion_widgets = []
         for i, fusion in enumerate(urls):
-            self.fusion_widgets.append(FusionWidget(fusion))
+            self.fusion_widgets.append(FusionWidget(fusion, click_callback))
             grid.addWidget(self.fusion_widgets[i], int(i / 5), i % 5)
 
         self.setLayout(grid)
@@ -76,6 +76,10 @@ class EvolineWidget(CustomWidget):
         for widget in self.fusion_widgets:
             widget.fetch_image(nam)
 
+    def update_tooltips(self, fusion: Optional[FusedPokemon] = None):
+        for widget in self.fusion_widgets:
+            widget.update_tooltip(fusion)
+
 
 class FusionWidget(CustomWidget):
     """
@@ -83,39 +87,53 @@ class FusionWidget(CustomWidget):
     and an InfoWidget with info about that pokemon.
     The items are disposed horizontally
     """
+    press_pos = None
+    border_style = "border: 3px solid red;"
 
-    def __init__(self, fusion: FusedPokemon):
+    def __init__(self, fusion: FusedPokemon, click_callback: Callable):
         super().__init__()
+
+        self.selected = False
+
+        self.click_callback = click_callback
         self.fusion = fusion
+        self.setFixedWidth(int(utils.SPRITE_SIZE * 3 / 2))
+        # Set style sheet.
+        # This sets background appearance and color based on fused pokemon types.
+        self.setObjectName('info')
+        self.setStyleSheet("QWidget#info{ "
+                           "  border-radius: 15px; "
+                           "  background: qlineargradient( x1:0 y1:0, "
+                           "                               x2:0 y2:1, "
+                           f"                              stop:0 {fusion.types[0].value}, "
+                           f"                              stop:1 {fusion.types[1].value});"
+                           "}")
 
         QToolTip.setFont(utils.get_font())
-        self.setToolTip(f'<h1 style="background-color:{fusion.types[0].value}; color: white;">'
-                        f'  {fusion.types[0].name}'
-                        f'</h1>'
-                        + (f'<h1 style="background-color:{fusion.types[1].value};color: white;">'
-                           f'   {fusion.types[1].name}'
-                           f'</h1>' if fusion.types[1] != fusion.types[0] else '') +
-                        f'<p>HP: {fusion.hp}</p>'
-                        f'<p>ATK: {fusion.attack}</p>'
-                        f'<p>DEF: {fusion.defense}</p>'
-                        f'<p>SP.ATK: {fusion.special_attack}</p>'
-                        f'<p>SP.DEF: {fusion.special_defense}</p>'
-                        f'<p>SPEED: {fusion.speed}</p>'
-                        f'<p>'
-                        f'  TOTAL: {fusion.hp + fusion.attack + fusion.defense + fusion.special_attack + fusion.special_defense + fusion.speed}'
-                        f'</p>')
+        self.update_tooltip(None)
 
         # Create a horizontal layout
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
 
         # Then create an image label and an info widget
+        self.pokemon_names_label = QLabel(fusion.head.capitalize()+' / '+fusion.body.capitalize())
+        self.pokemon_names_label.setFont(utils.get_font(bold=True))
         self.image = QLabel()
-        self.info_box = InfoWidget(fusion)
+        self.level_key_label = QLabel("LEVEL")
+        self.level_key_label.setFont(utils.get_font(bold=True))
+        self.level_value_label = QLabel(f"{fusion.min_level}-{fusion.max_level}")
+
+        for label in [self.pokemon_names_label, self.image, self.level_key_label, self.level_value_label]:
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Add everything to the layout
         layout.addStretch()
+        layout.addWidget(self.pokemon_names_label)
+        layout.addStretch()
         layout.addWidget(self.image)
-        layout.addWidget(self.info_box)
+        layout.addStretch()
+        layout.addWidget(self.level_key_label)
+        layout.addWidget(self.level_value_label)
         layout.addStretch()
 
         # Set the horizontal layout as the layout of the widget
@@ -126,68 +144,70 @@ class FusionWidget(CustomWidget):
         URL2LABEL.put(url, self.image)
         self.fusion.fetch_image(nam)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.RightButton:
+            self.press_pos = event.pos()
 
-class InfoWidget(CustomWidget):
-    """
-    A Widget displaying data about a fused pokemon
-    """
+    def mouseReleaseEvent(self, event):
+        # ensure that the left button was pressed *and* released within the
+        # geometry of the widget; if so, emit the signal;
+        if (self.press_pos is not None
+                and event.button() == Qt.MouseButton.RightButton
+                and event.pos() in self.rect()):
+            self.click_callback(self)
+        self.press_pos = None
 
-    def __init__(self, fusion: FusedPokemon):
-        super().__init__()
+    def select(self):
+        self.selected = True
+        ss = self.styleSheet()
+        ss = ss.replace('}', self.border_style+'}')
+        self.setStyleSheet(ss)
 
-        # Set style sheet.
-        # This sets background appearance and color based on fused pokemon types.
-        self.setObjectName('info')
-        self.setStyleSheet("QWidget#info{ "
-                           f" width: {int(utils.SPRITE_SIZE/2)}; "
-                           f" height: {utils.SPRITE_SIZE}; "
-                           "  border-radius: 15px; "
-                           "  border-bottom-left-radius: 3px;"
-                           "  background: qlineargradient( x1:0 y1:0, "
-                           "                               x2:0 y2:1, "
-                           f"                              stop:0 {fusion.types[0].value}, "
-                           f"                              stop:1 {fusion.types[1].value});"
-                           "}")
+    def deselect(self):
+        self.selected = False
+        try:
+            ss = self.styleSheet()
+            ss = ss.replace(self.border_style+'}', '}')
+            self.setStyleSheet(ss)
+        except RuntimeError as e:
+            print(e)
 
-        # Create a center-aligned layout (to add labels to)
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def update_tooltip(self, fusion: FusedPokemon = None):
 
-        # Create labels (key, value) with info
-        label_head_key = QLabel("HEAD")
-        label_head_value = QLabel(fusion.head.capitalize())
+        tooltip = f'<h1 style="background-color:{self.fusion.types[0].value}; ' \
+                  f'    color: white;">' \
+                  f'        {self.fusion.types[0].name}' \
+                  f'</h1>'
+        if self.fusion.types[1] != self.fusion.types[0]:
+            tooltip += f'<h1 style="background-color:{self.fusion.types[1].value};' \
+                       f'    color: white;">' \
+                       f'       {self.fusion.types[1].name}' \
+                       f'</h1>'
 
-        label_body_key = QLabel("BODY")
-        label_body_value = QLabel(fusion.body.capitalize())
+        def get_stat_line(stat_name: str, this: int, other: Optional[int]):
+            style = ''
+            difference = ''
+            if other:
+                color = 'green' if this >= other else 'red'
+                style = f' style="color: {color}";'
+                difference = this - other
+                difference = '(' + (
+                                 str(difference) if difference <= 0
+                                 else '+' + str(difference)
+                             ) + ')'
 
-        label_level_key = QLabel("LEVEL")
-        label_level_value = QLabel(f"{fusion.min_level}-{fusion.max_level}")
+            return (
+                f'<p{style}>'
+                f'   {stat_name}: {this} {difference}'
+                f'</p>'
+            )
 
-        # Set font of all key labels to custom and bold and alignment to center
-        font = utils.get_font(bold=True)
-        for key_label in [label_head_key, label_body_key, label_level_key]:
-            key_label.setFont(font)
-            key_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # Set font of all value labels to custom and white and alignment to center
-        font = utils.get_font()
-        for value_label in [label_head_value, label_body_value, label_level_value]:
-            value_label.setFont(font)
-            color_effect = QGraphicsColorizeEffect()
-            color_effect.setColor(Qt.GlobalColor.white)
-            value_label.setGraphicsEffect(color_effect)
-            value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        tooltip += get_stat_line('HP', self.fusion.hp, fusion.hp if fusion else None)
+        tooltip += get_stat_line('ATK', self.fusion.attack, fusion.attack if fusion else None)
+        tooltip += get_stat_line('DEF', self.fusion.defense, fusion.defense if fusion else None)
+        tooltip += get_stat_line('SP.ATK', self.fusion.special_attack, fusion.special_attack if fusion else None)
+        tooltip += get_stat_line('SP.DEF', self.fusion.special_defense, fusion.special_defense if fusion else None)
+        tooltip += get_stat_line('SPEED', self.fusion.speed, fusion.speed if fusion else None)
+        tooltip += get_stat_line('TOTAL', self.fusion.total, fusion.total if fusion else None)
 
-        # add labels to layout with appropriate stretches
-        layout.addStretch()
-        layout.addWidget(label_head_key)
-        layout.addWidget(label_head_value)
-        layout.addStretch()
-        layout.addWidget(label_body_key)
-        layout.addWidget(label_body_value)
-        layout.addStretch()
-        layout.addWidget(label_level_key)
-        layout.addWidget(label_level_value)
-        layout.addStretch()
-
-        # Set layout as layout of widget
-        self.setLayout(layout)
+        self.setToolTip(tooltip)

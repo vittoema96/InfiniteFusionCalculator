@@ -27,7 +27,7 @@ class IFCWindow(QMainWindow):
     output_panel is (10 * SPRITE_SIZE + 11 * MARGIN) wide
     """
     WIDTH: int = (utils.SPRITE_SIZE + 2 * utils.MARGIN) + \
-                 (10 * utils.SPRITE_SIZE + 11*utils.MARGIN)
+                 (12 * utils.SPRITE_SIZE + 11*utils.MARGIN)
 
     """
     Height of the window.
