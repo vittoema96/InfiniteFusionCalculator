@@ -1,13 +1,14 @@
-from typing import List, Callable, Optional
+from typing import Callable, Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter
 from PyQt6.QtNetwork import QNetworkAccessManager
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QGraphicsColorizeEffect, QGridLayout, QToolTip, \
-    QStyleOption, QStyle
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QGridLayout, QToolTip, \
+    QStyleOption, QStyle, QPushButton, QComboBox
 
 from data import utils
-from data.pokemon import FusedPokemon
+from data.stat_enum import Stat
+from data.pokemon import FusedPokemon, Pokemon, AbstractPokemon
 
 
 class _Url2LabelMap:
@@ -36,7 +37,7 @@ URL2LABEL = _Url2LabelMap()
 class CustomWidget(QWidget):
     """
     Base class of custom QWidgets.
-    Classes must implement this becase of paintEvent.
+    Classes must implement this because of paintEvent.
     Without this method, self.setStyleSheet(...) does not work.
     """
 
@@ -48,40 +49,91 @@ class CustomWidget(QWidget):
                                    option, painter, self)
 
 
-class EvolineWidget(CustomWidget):
+class FetchingWidget(CustomWidget):
+
+    def __init__(self, pokemon: AbstractPokemon, image: QLabel):
+        super().__init__()
+        self.pokemon = pokemon
+        self.image = image
+
+    def fetch_image(self, nam: QNetworkAccessManager):
+        url = self.pokemon.get_sprite_url()
+        URL2LABEL.put(url, self.image)
+        self.pokemon.fetch_image(nam)
+
+
+class GridWidget(CustomWidget):
     """
     A Grid containing n FusionWidgets.
     The Grid has a grey border and the items are 5 per row.
     """
 
-    def __init__(self, urls: List[FusedPokemon], click_callback: Callable):
+    def __init__(self, head: Pokemon, body: Pokemon, click_callback: Callable):
         super().__init__()
         # Set name (so that setting StyleSheet does not affect children widgets)
         self.setObjectName('evoline')
         # And Style Sheet (a gray border around evoline) TODO might want to make it look better
         self.setStyleSheet('QWidget#evoline{'
                            '     border: 5px ridge gray;'
+                           '     background: black;'
                            '}')
 
         # Create a grid where to put each fusion widget, in rows of 5
         grid = QGridLayout()
-        self.fusion_widgets = []
-        for i, fusion in enumerate(urls):
-            self.fusion_widgets.append(FusionWidget(fusion, click_callback))
-            grid.addWidget(self.fusion_widgets[i], int(i / 5), i % 5)
+        self.image_widgets = []
+        for x, head_stage in enumerate([head] + head.evoline):
+            for y, body_stage in enumerate([body] + body.evoline):
+                reverse = len(head.evoline) < len(body.evoline)
+                if x == 0 and y == 0:
+                    continue
+                elif y == 0:
+                    widget = RawWidget(head.evoline[x-1], is_horiz=not reverse)
+                elif x == 0:
+                    widget = RawWidget(body.evoline[y-1], is_horiz=reverse)
+                else:
+                    widget = FusionWidget(FusedPokemon(head=head_stage, body=body_stage), click_callback)
+
+                self.image_widgets.append(widget)
+                if reverse:
+                    grid.addWidget(widget, x, y)
+                else:
+                    grid.addWidget(widget, y, x)
 
         self.setLayout(grid)
 
     def fetch_images(self, nam: QNetworkAccessManager):
-        for widget in self.fusion_widgets:
+        for widget in self.image_widgets:
             widget.fetch_image(nam)
 
     def update_tooltips(self, fusion: Optional[FusedPokemon] = None):
-        for widget in self.fusion_widgets:
-            widget.update_tooltip(fusion)
+        for widget in self.image_widgets:
+            if isinstance(widget, FusionWidget):
+                widget.update_tooltip(fusion)
 
 
-class FusionWidget(CustomWidget):
+class RawWidget(FetchingWidget, QWidget):
+
+    def __init__(self, pokemon: Pokemon, is_horiz: bool):
+        super().__init__(pokemon, QLabel())
+        layout = QHBoxLayout()
+        if is_horiz:
+            self.setFixedHeight(utils.SPRITE_SIZE)
+        else:
+            self.setFixedWidth(utils.SPRITE_SIZE)
+
+        self.image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(self.image)
+        self.setLayout(layout)
+
+        self.setObjectName('raw')
+        self.setStyleSheet("QWidget#raw{ "
+                           "  border-radius: 10px; "
+                           "  background: white;"
+                           "}")
+
+
+class FusionWidget(FetchingWidget):
     """
     A Widget containing a QLabel with the image of a fused pokemon
     and an InfoWidget with info about that pokemon.
@@ -91,18 +143,17 @@ class FusionWidget(CustomWidget):
     border_style = "border: 3px solid red;"
 
     def __init__(self, fusion: FusedPokemon, click_callback: Callable):
-        super().__init__()
+        super().__init__(fusion, QLabel())
 
         self.selected = False
 
         self.click_callback = click_callback
         self.fusion = fusion
-        self.setFixedWidth(int(utils.SPRITE_SIZE * 3 / 2))
         # Set style sheet.
         # This sets background appearance and color based on fused pokemon types.
         self.setObjectName('info')
         self.setStyleSheet("QWidget#info{ "
-                           "  border-radius: 15px; "
+                           "  border-radius: 10px; "
                            "  background: qlineargradient( x1:0 y1:0, "
                            "                               x2:0 y2:1, "
                            f"                              stop:0 {fusion.types[0].value}, "
@@ -118,7 +169,6 @@ class FusionWidget(CustomWidget):
         # Then create an image label and an info widget
         self.pokemon_names_label = QLabel(fusion.head.capitalize()+' / '+fusion.body.capitalize())
         self.pokemon_names_label.setFont(utils.get_font(bold=True))
-        self.image = QLabel()
         self.level_key_label = QLabel("LEVEL")
         self.level_key_label.setFont(utils.get_font(bold=True))
         self.level_value_label = QLabel(f"{fusion.min_level}-{fusion.max_level}")
@@ -138,11 +188,6 @@ class FusionWidget(CustomWidget):
 
         # Set the horizontal layout as the layout of the widget
         self.setLayout(layout)
-
-    def fetch_image(self, nam: QNetworkAccessManager):
-        url = self.fusion.get_sprite_url()
-        URL2LABEL.put(url, self.image)
-        self.fusion.fetch_image(nam)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.RightButton:
@@ -211,3 +256,46 @@ class FusionWidget(CustomWidget):
         tooltip += get_stat_line('TOTAL', self.fusion.total, fusion.total if fusion else None)
 
         self.setToolTip(tooltip)
+
+
+class FuseButtonsWidget(QWidget):
+
+    def __init__(self, update_output: Callable):
+        super().__init__()
+        bold_font = utils.get_font(bold=True)
+        self.fuse_button = QPushButton("Fuse")
+        self.random_button = QPushButton("Fuse Random")
+        self.sort_by_text = QLabel("SORT BY")
+        self.sort_by_cbox = QComboBox()
+
+        self.fuse_button.setFont(bold_font)
+        self.random_button.setFont(bold_font)
+        self.sort_by_text.setFont(bold_font)
+        self.sort_by_cbox.setFont(utils.get_font())
+
+        self.sort_by_cbox.addItems([s.get_pretty_name() for s in Stat])
+
+        self.fuse_button.pressed.connect(
+            lambda: update_output(
+                order=Stat.get(self.sort_by_cbox.currentText())
+            )
+        )
+        self.random_button.pressed.connect(
+            lambda: update_output(
+                order=Stat.get(self.sort_by_cbox.currentText()),
+                random=True
+            )
+        )
+
+        layout = QVBoxLayout()
+
+        layout.addStretch()
+        layout.addWidget(self.sort_by_text)
+        layout.addWidget(self.sort_by_cbox)
+        layout.addStretch()
+        layout.addWidget(self.fuse_button)
+        layout.addStretch()
+        layout.addWidget(self.random_button)
+        layout.addStretch()
+
+        self.setLayout(layout)

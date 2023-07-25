@@ -1,11 +1,12 @@
-from itertools import combinations
 from random import Random
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QPushButton, QListWidget
 
 from data import pokedex
+from data.stat_enum import Stat
 from gui.tabs.base import IFCBaseTab
+from gui.tabs.widgets import FuseButtonsWidget
 
 
 class BatchTab(IFCBaseTab):
@@ -41,9 +42,7 @@ class BatchTab(IFCBaseTab):
         self.remove.setFont(self.font)
         self.remove.pressed.connect(self.remove_from_list)
 
-        self.fuse = QPushButton("Cross Fuse")
-        self.fuse.setFont(self.bold_font)
-        self.fuse.pressed.connect(self.mix)
+        self.fuse_buttons_widget = FuseButtonsWidget(self.update_output)
 
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.cbox)
@@ -53,11 +52,12 @@ class BatchTab(IFCBaseTab):
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.plist)
         self.input_layout.addStretch()
-        self.input_layout.addWidget(self.fuse)
+        self.input_layout.addWidget(self.fuse_buttons_widget)
         self.input_layout.addStretch()
 
     def remove_from_list(self) -> None:
         indexes_to_remove = [item.row() for item in self.plist.selectedIndexes()]
+        indexes_to_remove.sort(reverse=True)
         for index in indexes_to_remove:
             item = self.plist.takeItem(index).text()
             if self.cbox.findText(item, Qt.MatchFlag.MatchExactly) == -1:
@@ -82,24 +82,26 @@ class BatchTab(IFCBaseTab):
                 break
         self.plist.addItem(item_to_add)
 
-    def mix(self):
+    def update_output(self, order: Stat, random: bool = False):
+        if random:
+            self.plist.setSelectionMode(self.plist.SelectionMode.MultiSelection)
+            self.plist.selectAll()
+            self.remove_from_list()
+            self.plist.setSelectionMode(self.plist.SelectionMode.SingleSelection)
+            for _ in range(Random().randint(3, 7)):
+                self.random.click()
+
         self.clear_layout(self.output_layout)
 
-        result = []
+        selected = []
         for i in range(self.plist.count()):
-            result.append(self.plist.item(i).text())
-
-        # extract duplicates and set result to contain unique elements
-        duplicates = set([name for name in result if result.count(name) > 1])
-        result = list(set(result))
-
-        # get a list of all combinations of 2 pokemons
-        result = list(combinations(result, 2))
-
-        # if there were duplicates, add them to the list
-        for duplicate in duplicates:
-            result.append((duplicate, duplicate))
-
-        for i, (pkmn1, pkmn2) in enumerate(result):
-            self.add_evoline_widgets(pkmn1, pkmn2)
-            print(i+1, '/', len(result))
+            selected.append(
+                pokedex.get_pokemon(
+                    name=self.plist.item(i).text()
+                ).evoline[0]
+            )
+        couples = set()
+        for i, r1 in enumerate(selected):
+            for r2 in selected[i+1:]:
+                couples.add((r1, r2))
+        self.add_fusions(fusions=list(couples), order=order)

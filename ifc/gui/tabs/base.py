@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from PyQt6 import QtNetwork
 from PyQt6.QtCore import Qt, QByteArray, QUrl
@@ -8,8 +8,10 @@ from PyQt6.QtGui import QPixmap, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QScrollArea, QLayout, QLabel
 
 from data import utils
+from data.stat_enum import Stat
+from data.pokemon import Pokemon, FusedPokemon
 from gui.tabs import widgets
-from gui.tabs.widgets import EvolineWidget, FusionWidget
+from gui.tabs.widgets import GridWidget, FusionWidget
 
 
 class IFCBaseTab(QWidget):
@@ -38,7 +40,7 @@ class IFCBaseTab(QWidget):
 
         # Create the input layout and add it to a QWidget (so we can set the size)
         input_container = QWidget()
-        input_container.setFixedWidth(2 * utils.MARGIN + utils.SPRITE_SIZE)
+        input_container.setFixedWidth(4 * utils.MARGIN + utils.SPRITE_SIZE)
         self.input_layout = QVBoxLayout()
         input_container.setLayout(self.input_layout)
 
@@ -72,7 +74,7 @@ class IFCBaseTab(QWidget):
             child = self.output_layout.itemAt(i)
             if child.widget() is not None:
                 widget = child.widget()
-                if isinstance(widget, EvolineWidget):
+                if isinstance(widget, GridWidget):
                     widget.update_tooltips(self.selected_pokemon.fusion if self.selected_pokemon else None)
 
     def set_info_message(self, message: str):
@@ -181,24 +183,51 @@ class IFCBaseTab(QWidget):
                 else:
                     logging.warning(f"Could not find an alternative url for '{url}'")
 
-    def add_evoline_widgets(self, pkmn1: str, pkmn2: str, display_ab: bool = True, display_ba: bool = True):
+    def add_fusions(self, fusions: List[Tuple[Pokemon, Pokemon]], order: Stat, include_reverse: bool = True):
+        self.output_layout.addStretch()
+        couples = []
+        for head, body in fusions:
+            head = head.evoline[0]
+            body = body.evoline[0]
+            couples.append((head, body))
+            if include_reverse and head != body:
+                couples.append((body, head))
+        couples = list(set(couples))
 
-        fusions_ab, fusions_ba = utils.get_fusions(pkmn1, pkmn2)
+        def check_stat(t: Tuple[Pokemon, Pokemon]):
+            max_val = 0
+            for stage1 in t[0].evoline:
+                for stage2 in t[1].evoline:
+                    val = order.get_value(FusedPokemon(stage1, stage2))
+                    if val > max_val:
+                        max_val = val
+            return max_val
+
+        couples.sort(key=check_stat, reverse=True)
+
+        for p1, p2 in couples:
+            widget = GridWidget(p1, p2, self.select_pokemon)
+            widget.fetch_images(self.nam)
+            self.output_layout.addWidget(widget)
+            self.output_layout.addStretch()
+
+
+    def add_evoline_widgets(self,
+                            pkmn1: Pokemon, pkmn2: Pokemon,
+                            order: str = "TOTAL",
+                            display_ab: bool = True, display_ba: bool = True):
 
         self.output_layout.addStretch()
 
-        evolines = []
         # Add the fusions to the visible list
         # Add ab and ba fusions separately only if they are enabled
         if display_ab:
-            evolines.append(fusions_ab)
+            evoline_ab_widget = GridWidget(pkmn1, pkmn2, self.select_pokemon)
+            evoline_ab_widget.fetch_images(self.nam)
+            self.output_layout.addWidget(evoline_ab_widget)
         if display_ba:
-            evolines.append(fusions_ba)
+            evoline_ba_widget = GridWidget(pkmn2, pkmn1, self.select_pokemon)
+            evoline_ba_widget.fetch_images(self.nam)
+            self.output_layout.addWidget(evoline_ba_widget)
 
-        # Create an Evoline widget for each enabled evoline (AB and BA)
-        for row, evoline in enumerate(evolines):
-            if len(evoline) > 0:
-                evoline_widget = EvolineWidget(evoline, self.select_pokemon)
-                evoline_widget.fetch_images(self.nam)
-                self.output_layout.addWidget(evoline_widget)
-                self.output_layout.addStretch()
+        self.output_layout.addStretch()

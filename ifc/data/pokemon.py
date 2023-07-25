@@ -11,7 +11,7 @@ from PyQt6.QtCore import QUrl
 from PyQt6.QtNetwork import QNetworkAccessManager
 
 from data import pokedex
-from data.enums import Type
+from data.type_enum import Type
 
 
 class AbstractPokemon(ABC):

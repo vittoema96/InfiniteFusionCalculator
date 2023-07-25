@@ -1,11 +1,12 @@
 from random import Random
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QComboBox
 
 from data import utils, pokedex
+from data.stat_enum import Stat
 from gui.tabs import widgets
 from gui.tabs.base import IFCBaseTab
+from gui.tabs.widgets import FuseButtonsWidget
 
 
 class SingleTab(IFCBaseTab):
@@ -26,9 +27,7 @@ class SingleTab(IFCBaseTab):
         self.sprite2, self.cbox2, self.random2 = self.init_input()
 
         # Create the FUSE button and connect it to update
-        self.fuse_button = QPushButton("Fuse")
-        self.fuse_button.setFont(self.bold_font)
-        self.fuse_button.pressed.connect(self.update_output)
+        self.fuse_buttons_widget = FuseButtonsWidget(self.update_output)
 
         # Add everything to input_layout with the correct spaces
         self.input_layout.addStretch()
@@ -42,7 +41,7 @@ class SingleTab(IFCBaseTab):
         self.input_layout.addWidget(self.cbox2)
         self.input_layout.addWidget(self.random2)
         self.input_layout.addStretch()
-        self.input_layout.addWidget(self.fuse_button)
+        self.input_layout.addWidget(self.fuse_buttons_widget)
         self.input_layout.addStretch()
 
     def init_input(self):
@@ -73,10 +72,13 @@ class SingleTab(IFCBaseTab):
         random.clicked.connect(get_random)
         return sprite, cbox, random
 
-    def update_output(self):
-        pkmn1 = self.cbox1.currentText()
-        pkmn2 = self.cbox2.currentText()
+    def update_output(self, order: Stat, random: bool = False):
+        if random:
+            self.random1.click()
+            self.random2.click()
+        pkmn1 = pokedex .get_pokemon(name=self.cbox1.currentText())
+        pkmn2 = pokedex .get_pokemon(name=self.cbox2.currentText())
 
         self.clear_layout(self.output_layout)
 
-        self.add_evoline_widgets(pkmn1, pkmn2)
+        self.add_fusions(fusions=[(pkmn1, pkmn2)], order=order)

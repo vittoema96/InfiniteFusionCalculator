@@ -5,7 +5,7 @@ from typing import List
 import pandas as pd
 from pandas import DataFrame
 
-from data.enums import Type
+from data.type_enum import Type
 from data.pokemon import Pokemon
 from ifc import RESOURCES_PATH
 
