@@ -27,7 +27,7 @@ MARGIN: int = 10
 TITLE: str = SHORTNAME + ' - ' + NAME + ' v' + VERSION
 
 
-def get_font(font_size: int = 12,
+def get_font(font_size: int = 15,
              bold: bool = False,
              italic: bool = False,
              underline: bool = False) -> QFont:

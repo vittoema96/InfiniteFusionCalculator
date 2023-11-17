@@ -175,5 +175,5 @@ class FusedPokemon(AbstractPokemon):
         from data import pokedex
         head_id = pokedex.get_id_by_name(self.head)
         body_id = pokedex.get_id_by_name(self.body)
-        return f"https://raw.githubusercontent.com/Aegide/custom-fusion-sprites/" \
-               f"main/CustomBattlers/{head_id}.{body_id}.png"
+        return f"https://fusioncalc.com/wp-content/themes/twentytwentyone/pokemon/" \
+               f"custom-fusion-sprites-main/CustomBattlers/{head_id}.{body_id}.png"

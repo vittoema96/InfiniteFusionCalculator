@@ -14,14 +14,6 @@ class SingleTab(IFCBaseTab):
     def __init__(self):
         super().__init__()
 
-        # Define the INFO box
-        self.info_box = QVBoxLayout()
-
-        self.set_info_message("You can see typing and stats of a Pokemon hovering it with the mouse.\n\n"
-                              "To keep the application light-weight, "
-                              "the sprites are downloaded on every fusion request.")
-
-
         # Create the 2 inputs for the pokemons (label, combobox and random button)
         self.sprite1, self.cbox1, self.random1 = self.init_input()
         self.sprite2, self.cbox2, self.random2 = self.init_input()
@@ -30,8 +22,10 @@ class SingleTab(IFCBaseTab):
         self.fuse_buttons_widget = FuseButtonsWidget(self.update_output)
 
         # Add everything to input_layout with the correct spaces
-        self.input_layout.addStretch()
-        self.input_layout.addLayout(self.info_box)
+
+        self.set_info_message("You can see typing and stats of a Pokemon hovering it with the mouse.\n\n"
+                              "Right click on a fusion to select it, hovering over other fusions will show "
+                              "stat comparison.")
         self.input_layout.addStretch()
         self.input_layout.addWidget(self.sprite1)
         self.input_layout.addWidget(self.cbox1)

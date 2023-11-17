@@ -108,7 +108,6 @@ class IFCBaseTab(QWidget):
 
         self.input_layout.addStretch()
         self.input_layout.addLayout(self.info_box)
-        self.input_layout.addStretch()
 
     @staticmethod
     def clear_layout(layout: QLayout):
@@ -156,32 +155,30 @@ class IFCBaseTab(QWidget):
 
             else:
                 if 'black-white' in url:
-                    label = widgets.URL2LABEL.delete(url)
-                    url = url.replace('black-white', 'sun-moon')
-                    qurl = QtNetwork.QNetworkRequest(QUrl(url))
-                    widgets.URL2LABEL.put(url, label)
-                    self.nam.get(qurl)
+                    replace_from = 'black-white'
+                    replace_to = 'sun-moon'
+                elif 'sun-moon' in url:
+                    replace_from = 'sun-moon'
+                    replace_to = 'x-y'
                 elif 'main/CustomBattlers' in url:
-                    label = widgets.URL2LABEL.delete(url)
-                    url = url.replace('main/CustomBattlers', 'master/Battlers')
-                    qurl = QtNetwork.QNetworkRequest(QUrl(url))
-                    widgets.URL2LABEL.put(url, label)
-                    self.nam.get(qurl)
+                    replace_from = 'main/CustomBattlers'
+                    replace_to = 'master/Battlers'
                 elif re.search(r'master/Battlers/\d+.\d+\.png', url):
-                    label = widgets.URL2LABEL.delete(url)
                     idx = url.split('/')[-1].split('.')[0]
-                    url = url.replace('master/Battlers/', f'master/Battlers/{idx}/')
-                    qurl = QtNetwork.QNetworkRequest(QUrl(url))
-                    widgets.URL2LABEL.put(url, label)
-                    self.nam.get(qurl)
+                    replace_from = 'master/Battlers/'
+                    replace_to = f'master/Battlers/{idx}/'
                 elif re.search(r'master/Battlers/\d+/\d+.\d+\.png', url):
-                    label = widgets.URL2LABEL.delete(url)
-                    url = url.replace('custom', 'autogen')
-                    qurl = QtNetwork.QNetworkRequest(QUrl(url))
-                    widgets.URL2LABEL.put(url, label)
-                    self.nam.get(qurl)
+                    replace_from = 'custom'
+                    replace_to = 'autogen'
                 else:
                     logging.warning(f"Could not find an alternative url for '{url}'")
+                    return
+
+                label = widgets.URL2LABEL.delete(url)
+                url = url.replace(replace_from, replace_to)
+                qurl = QtNetwork.QNetworkRequest(QUrl(url))
+                widgets.URL2LABEL.put(url, label)
+                self.nam.get(qurl)
 
     def add_fusions(self, fusions: List[Tuple[Pokemon, Pokemon]], order: Stat, include_reverse: bool = True):
         self.output_layout.addStretch()
@@ -210,7 +207,6 @@ class IFCBaseTab(QWidget):
             widget.fetch_images(self.nam)
             self.output_layout.addWidget(widget)
             self.output_layout.addStretch()
-
 
     def add_evoline_widgets(self,
                             pkmn1: Pokemon, pkmn2: Pokemon,

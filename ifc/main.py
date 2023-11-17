@@ -1,5 +1,4 @@
 from PyQt6.QtWidgets import QApplication
-
 from ifc.gui.window import IFCWindow
 
 

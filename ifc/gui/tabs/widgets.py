@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Union
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter
@@ -16,15 +16,18 @@ class _Url2LabelMap:
     def __init__(self):
         self._map = dict()
 
-    def put(self, url: str, label: QLabel):
+    def put(self, url: str, labels: Union[QLabel, List[QLabel]]):
         val = self._map.get(url) if self._map.get(url) else []
-        val.append(label)
+        if isinstance(labels, QLabel):
+            labels = [labels]
+        for l in labels:
+            val.append(l)
         self._map[url] = val
 
-    def delete(self, url: str) -> QLabel:
-        return self._map.pop(url)[0]
+    def delete(self, url: str) -> List[QLabel]:
+        return self._map.pop(url)
 
-    def get(self, url: str):
+    def get(self, url: str) -> List[QLabel]:
         return self._map.get(url, [])
 
     def keys(self):
