@@ -2,4 +2,5 @@ build/
 .idea/
 IFC.spec
 *.pyc
-dist/IFC.exe
+dist/IFC
+dist/IFC.zip

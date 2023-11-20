@@ -47,5 +47,3 @@ if __name__ == '__main__':
     with ZipFile(zip_path, mode='w', compresslevel=9) as archive:
         archive.write(os.path.join(output_dir, win_name), win_name)
         zipdir(os.path.join(output_dir, mac_name), archive)
-
-    clean_dist()
