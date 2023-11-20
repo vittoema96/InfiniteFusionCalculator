@@ -1,40 +1,14 @@
-from typing import Callable, Optional, List, Union
+from typing import Callable, Optional
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter
-from PyQt6.QtNetwork import QNetworkAccessManager
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QGridLayout, QToolTip, \
     QStyleOption, QStyle, QPushButton, QComboBox
 
 from data import utils
 from data.stat_enum import Stat
 from data.pokemon import FusedPokemon, Pokemon, AbstractPokemon
-
-
-class _Url2LabelMap:
-
-    def __init__(self):
-        self._map = dict()
-
-    def put(self, url: str, labels: Union[QLabel, List[QLabel]]):
-        val = self._map.get(url) if self._map.get(url) else []
-        if isinstance(labels, QLabel):
-            labels = [labels]
-        for l in labels:
-            val.append(l)
-        self._map[url] = val
-
-    def delete(self, url: str) -> List[QLabel]:
-        return self._map.pop(url)
-
-    def get(self, url: str) -> List[QLabel]:
-        return self._map.get(url, [])
-
-    def keys(self):
-        return self._map.keys()
-
-
-URL2LABEL = _Url2LabelMap()
+from gui.widget_painter import WidgetPainter
 
 
 class CustomWidget(QWidget):
@@ -59,10 +33,8 @@ class FetchingWidget(CustomWidget):
         self.pokemon = pokemon
         self.image = image
 
-    def fetch_image(self, nam: QNetworkAccessManager):
         url = self.pokemon.get_sprite_url()
-        URL2LABEL.put(url, self.image)
-        self.pokemon.fetch_image(nam)
+        WidgetPainter().put(url, self.image)
 
 
 class GridWidget(CustomWidget):
@@ -103,10 +75,6 @@ class GridWidget(CustomWidget):
                     grid.addWidget(widget, y, x)
 
         self.setLayout(grid)
-
-    def fetch_images(self, nam: QNetworkAccessManager):
-        for widget in self.image_widgets:
-            widget.fetch_image(nam)
 
     def update_tooltips(self, fusion: Optional[FusedPokemon] = None):
         for widget in self.image_widgets:

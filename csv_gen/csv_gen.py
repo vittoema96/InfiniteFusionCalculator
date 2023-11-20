@@ -181,8 +181,6 @@ def get_levels(link):
     if not max_level:
         max_level = [100]
 
-
-
     return min_level, max_level
 
 

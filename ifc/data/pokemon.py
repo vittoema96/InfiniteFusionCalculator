@@ -6,9 +6,6 @@ from abc import ABC
 from typing import List
 
 import pandas as pd
-from PyQt6 import QtNetwork
-from PyQt6.QtCore import QUrl
-from PyQt6.QtNetwork import QNetworkAccessManager
 
 from data import pokedex
 from data.type_enum import Type
@@ -86,10 +83,6 @@ class AbstractPokemon(ABC):
     @property
     def total(self) -> int:
         return self.hp + self.attack + self.defense + self.special_attack + self.special_defense + self.speed
-
-    def fetch_image(self, nam: QNetworkAccessManager) -> None:
-        qurl = QtNetwork.QNetworkRequest(QUrl(self.get_sprite_url()))
-        nam.get(qurl)
 
     @abc.abstractmethod
     def get_sprite_url(self) -> str:

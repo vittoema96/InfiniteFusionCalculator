@@ -1,10 +1,10 @@
 import os
-from typing import Tuple, List, Optional
+from typing import Tuple, List
 
 from PyQt6.QtGui import QFontDatabase, QFont
 
 from data.pokedex import get_evolution_list
-from data.pokemon import FusedPokemon
+from data.pokemon import FusedPokemon, Pokemon
 from ifc import FONTS_PATH
 
 """ Short name for the app"""
@@ -19,7 +19,7 @@ PATCH: int = 0
 """ Version of the app (in string form) """
 VERSION: str = f"{MAJOR}.{MINOR}" + (f"{PATCH}" if PATCH > 0 else "")
 
-""" The size that a Pokémon Sprite must have (1:1 ratio) """
+""" The size that a Pokemon Sprite must have (1:1 ratio) """
 SPRITE_SIZE: int = 100
 """ Margin to use in the app """
 MARGIN: int = 10
@@ -42,7 +42,7 @@ def get_font(font_size: int = 15,
     return qfont
 
 
-def get_fusions(name1: str, name2: str) -> \
+def get_fusions(evoline1: List[Pokemon], evoline2: List[Pokemon]) -> \
         Tuple[
             List[FusedPokemon],
             List[FusedPokemon]
@@ -54,13 +54,11 @@ def get_fusions(name1: str, name2: str) -> \
     List 2 has fusions with head <pokemon from evoline of pkmn2>
     and body <pokemon from evoline of pkmn1>
     """
-    l1 = get_evolution_list(name1)
-    l2 = get_evolution_list(name2)
 
     result_ab = []
     result_ba = []
-    for i, a in enumerate(l1):
-        for b in l2:
+    for i, a in enumerate(evoline1):
+        for b in evoline2:
             fusion_ab = FusedPokemon(a, b)
             fusion_ba = FusedPokemon(b, a)
             if fusion_ab.max_level - fusion_ba.min_level >= 0:

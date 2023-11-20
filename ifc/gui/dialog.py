@@ -35,7 +35,9 @@ class UpdateDialog(QDialog):
 
         button = QDialogButtonBox.StandardButton.Yes | QDialogButtonBox.StandardButton.Cancel
         self.buttonBox = QDialogButtonBox(button)
-        self.buttonBox.accepted.connect(self.go_to_github)
+        self.buttonBox.accepted.connect(
+            lambda: webbrowser.open('https://github.com/vittoema96/InfiniteFusionCalculator#exe')
+        )
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
@@ -48,6 +50,3 @@ class UpdateDialog(QDialog):
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
-
-    def go_to_github(self):
-        webbrowser.open('https://github.com/vittoema96/InfiniteFusionCalculator#exe')

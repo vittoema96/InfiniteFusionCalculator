@@ -14,7 +14,7 @@ _data: DataFrame = pd.read_csv(os.path.join(RESOURCES_PATH, 'data.csv'), index_c
 
 def get_names() -> List[str]:
     """
-    Returns a list of the names of all the pokemons in the pokedex
+    Returns a list of the names of all the Pokémons in the pokedex
     """
     return _data['NAME'].tolist()
 
@@ -39,8 +39,8 @@ def get_pokemon(idx: int = None, name: str = None) -> Pokemon:
 
 
 def get_evolines_by_type(first_type: Type = None, second_type: Type = None) -> List[List[Pokemon]]:
-    must_contain = (f'\["{first_type.name}"' if first_type and not Type.is_any(first_type) else "") + \
-                   (f', "{second_type.name}"\]' if second_type and not Type.is_any(second_type) else "")
+    must_contain = (f'\\["{first_type.name}"' if first_type and not Type.is_any(first_type) else "") + \
+                   (f', "{second_type.name}"\\]' if second_type and not Type.is_any(second_type) else "")
     return [
         get_pokemon(json.loads(evo)[0]).evoline
         for evo in _data[
@@ -49,10 +49,9 @@ def get_evolines_by_type(first_type: Type = None, second_type: Type = None) -> L
     ]
 
 
-
 def get_id_by_name(name: str) -> int:
     """
-    Returns the ID of the pokemon with name 'name'
+    Returns the ID of the Pokémon with name 'name'
     :param name: The name of the pokemon to get the id of
     :return: The id of the pokemon
     """

@@ -1,10 +1,32 @@
 import os
+import shutil
+import zipfile
 from zipfile import ZipFile
 
 if __name__ == '__main__':
     APP_NAME = 'IFC'
-    win_ext = 'exe'
-    mac_ext = 'app'
+    output_dir = 'dist'
+    zip_name = f'{APP_NAME}.zip'
+    win_name = f'{APP_NAME}.exe'
+    mac_name = f'{APP_NAME}.app'
+
+    def clean_dist(keep=zip_name):
+        if os.path.isdir(output_dir):
+            files = os.listdir(output_dir)
+            for f in files:
+                if f != keep:
+                    p = os.path.join(output_dir, f)
+                    if os.path.isdir(p):
+                        shutil.rmtree(p)
+                    else:
+                        os.remove(p)
+
+    clean_dist()
+
+    zip_path = os.path.join(output_dir, zip_name)
+    if os.path.exists(zip_path):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(output_dir)
 
     os.system('pyinstaller --noconfirm --onefile --windowed '
               '--icon "./ifc/resources/icon.ico" '
@@ -13,19 +35,6 @@ if __name__ == '__main__':
               '--add-data "./ifc/gui:ifc/gui/" '
               '--add-data "./ifc/resources:ifc/resources/"  '
               '"./ifc/main.py"')
-    os.chdir('dist')
-
-    result_file_name = None
-    ext = None
-    for extension in [win_ext, mac_ext]:
-        f = f'{APP_NAME}.{extension}'
-        if os.path.exists(f):
-            result_file_name = f
-            ext = extension
-            break
-
-    assert result_file_name, "Resulting file is either inexistent or does not have an .exe or .app extension"
-
 
     def zipdir(path, ziph):
         # ziph is zipfile handle
@@ -35,8 +44,8 @@ if __name__ == '__main__':
                            os.path.relpath(os.path.join(root, file),
                                            os.path.join(path, '..')))
 
-    with ZipFile(f'{APP_NAME}_{ext}.zip', mode="w") as archive:
-        zipdir(f'{APP_NAME}.{ext}', archive)
+    with ZipFile(zip_path, mode='w', compresslevel=9) as archive:
+        archive.write(os.path.join(output_dir, win_name), win_name)
+        zipdir(os.path.join(output_dir, mac_name), archive)
 
-    if os.path.exists(APP_NAME):
-        os.remove(APP_NAME)
+    clean_dist()

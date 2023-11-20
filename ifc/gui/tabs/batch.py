@@ -3,7 +3,7 @@ from random import Random
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QPushButton, QListWidget
 
-from data import pokedex
+from data import pokedex, utils
 from data.stat_enum import Stat
 from gui.tabs.base import IFCBaseTab
 from gui.tabs.widgets import FuseButtonsWidget
@@ -18,17 +18,17 @@ class BatchTab(IFCBaseTab):
                               "the possible combinations between them!")
 
         self.cbox = QComboBox()
-        self.cbox.setFont(self.font)
+        self.cbox.setFont(utils.get_font())
         self.cbox.addItems(pokedex.get_names())
 
         self.add = QPushButton("Add")
-        self.add.setFont(self.font)
+        self.add.setFont(utils.get_font())
         self.plist = QListWidget()
-        self.plist.setFont(self.font)
+        self.plist.setFont(utils.get_font())
         self.add.pressed.connect(self.update_list)
 
         self.random = QPushButton("Add Random")
-        self.random.setFont(self.font)
+        self.random.setFont(utils.get_font())
 
         def get_random():
             items_n = self.cbox.count()
@@ -39,7 +39,7 @@ class BatchTab(IFCBaseTab):
         self.random.clicked.connect(get_random)
 
         self.remove = QPushButton("Remove")
-        self.remove.setFont(self.font)
+        self.remove.setFont(utils.get_font())
         self.remove.pressed.connect(self.remove_from_list)
 
         self.fuse_buttons_widget = FuseButtonsWidget(self.update_output)

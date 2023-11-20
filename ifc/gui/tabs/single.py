@@ -1,12 +1,12 @@
 from random import Random
 
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QComboBox
+from PyQt6.QtWidgets import QLabel, QPushButton, QComboBox
 
 from data import utils, pokedex
 from data.stat_enum import Stat
-from gui.tabs import widgets
 from gui.tabs.base import IFCBaseTab
 from gui.tabs.widgets import FuseButtonsWidget
+from gui.widget_painter import WidgetPainter
 
 
 class SingleTab(IFCBaseTab):
@@ -38,7 +38,8 @@ class SingleTab(IFCBaseTab):
         self.input_layout.addWidget(self.fuse_buttons_widget)
         self.input_layout.addStretch()
 
-    def init_input(self):
+    @staticmethod
+    def init_input():
         sprite = QLabel()
         sprite.setFixedHeight(utils.SPRITE_SIZE)
         sprite.setFixedWidth(utils.SPRITE_SIZE)
@@ -46,13 +47,12 @@ class SingleTab(IFCBaseTab):
                              "     border: 5px ridge gray;"
                              "}")
         cbox = QComboBox()
-        cbox.setFont(self.font)
+        cbox.setFont(utils.get_font())
         cbox.addItems(pokedex.get_names())
 
         def on_text_changed():
             pokemon = pokedex.get_pokemon(name=cbox.currentText())
-            widgets.URL2LABEL.put(pokemon.get_sprite_url(), sprite)
-            pokemon.fetch_image(self.nam)
+            WidgetPainter().put(pokemon.get_sprite_url(), sprite)
 
         cbox.currentTextChanged.connect(on_text_changed)
         on_text_changed()
@@ -62,7 +62,7 @@ class SingleTab(IFCBaseTab):
             idx = Random().randint(0, items_n-1)
             cbox.setCurrentIndex(idx)
         random = QPushButton('Random')
-        random.setFont(self.font)
+        random.setFont(utils.get_font())
         random.clicked.connect(get_random)
         return sprite, cbox, random
 

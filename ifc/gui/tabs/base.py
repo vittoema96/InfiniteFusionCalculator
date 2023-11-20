@@ -1,16 +1,12 @@
-import logging
-import re
 from typing import List, Optional, Tuple
 
-from PyQt6 import QtNetwork
-from PyQt6.QtCore import Qt, QByteArray, QUrl
-from PyQt6.QtGui import QPixmap, QPalette, QColor
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QScrollArea, QLayout, QLabel
 
 from data import utils
 from data.stat_enum import Stat
 from data.pokemon import Pokemon, FusedPokemon
-from gui.tabs import widgets
 from gui.tabs.widgets import GridWidget, FusionWidget
 
 
@@ -24,43 +20,65 @@ class IFCBaseTab(QWidget):
     def __init__(self):
         super().__init__()
 
+        # The currently selected Pokemon
         self.selected_pokemon = None
 
-        self.font = utils.get_font()
-        self.bold_font = utils.get_font(bold=True)
-
-        # Manager used to load sprites quickly
-        self.nam = QtNetwork.QNetworkAccessManager()
-        self.nam.finished.connect(self.on_image_result)
-
-        # Create and add the root panel of the tab
-        self.layout = QHBoxLayout()
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignLeading)
+        self.layout = self._init_layout()
         self.setLayout(self.layout)
 
-        # Create the input layout and add it to a QWidget (so we can set the size)
+        self.input_container = self._init_input_container()
+        self.input_layout = QVBoxLayout()
+        self.input_container.setLayout(self.input_layout)
+
+        self.output_container = self._init_output_container()
+        self.output_layout = QVBoxLayout()
+        self.output_container.widget().setLayout(self.output_layout)
+
+        self.layout.addWidget(self.input_container)
+        self.layout.addWidget(self.output_container)
+
+    @staticmethod
+    def _init_layout() -> QHBoxLayout:
+        """
+        Creates, aligns and sets the (QHBox)Layout of this widget
+        """
+        layout = QHBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeading)
+        return layout
+
+    @staticmethod
+    def _init_input_container() -> QWidget:
+        """
+        Create the container for the input layout
+        """
         input_container = QWidget()
         input_container.setFixedWidth(4 * utils.MARGIN + utils.SPRITE_SIZE)
-        self.input_layout = QVBoxLayout()
-        input_container.setLayout(self.input_layout)
 
-        # Create a scroll area (so if too many outputs are added we can scroll)
+        return input_container
+
+    @staticmethod
+    def _init_output_container() -> QScrollArea:
+        """
+        Create the container of the output layout, a scroll area (so if too many outputs are added we can scroll)
+        """
         output_scroll = QScrollArea()
         # Create the output layout and add it to a QWidget (so we can set the size)
         output_container = QWidget()
         output_container.setFixedWidth(12 * utils.SPRITE_SIZE)
-        self.output_layout = QVBoxLayout()
-        output_container.setLayout(self.output_layout)
+
         # Add output container to scroll area and set vertical scrollbar always displaying
         output_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         output_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         output_scroll.setWidgetResizable(True)
         output_scroll.setWidget(output_container)
 
-        self.layout.addWidget(input_container)
-        self.layout.addWidget(output_scroll)
+        return output_scroll
 
-    def select_pokemon(self, widget: Optional[FusionWidget]):
+    def select_pokemon(self, widget: Optional[FusionWidget]) -> None:
+        """
+
+        :param widget:
+        """
         if self.selected_pokemon is not None:
             self.selected_pokemon.deselect()
 
@@ -69,43 +87,60 @@ class IFCBaseTab(QWidget):
             self.selected_pokemon.select()
         else:
             self.selected_pokemon = None
-
+        # Now we need to update all tooltips (for confrontation)
+        # Cycle over all evolines
         for i in range(self.output_layout.count()):
+            # Get QWidgetItem and its widget (GridWidget)
             child = self.output_layout.itemAt(i)
-            if child.widget() is not None:
-                widget = child.widget()
-                if isinstance(widget, GridWidget):
-                    widget.update_tooltips(self.selected_pokemon.fusion if self.selected_pokemon else None)
+            widget = child.widget()
+            if widget and isinstance(widget, GridWidget):
+                widget.update_tooltips(self.selected_pokemon.fusion if self.selected_pokemon else None)
 
     def set_info_message(self, message: str):
+        """
+        Sets an INFO message to the input panel
+        :param message: The content of the message
+        """
         self._set_message(header='INFO', message=message)
 
     def set_warning_message(self, message: str):
+        """
+        Sets a WARNING message to the input panel
+        :param message: The content of the message
+        """
         self._set_message(header='WARNING', color=QColor("red"), message=message)
 
     def _set_message(self, message: str, header: str = None, color: QColor = QColor("black")):
+        """
+        Base method to set a message for the input layout
+        :param message: The message to display
+        :param header: The title of the message (bold and may be a different color)
+        :param color: The color of the header
+        """
         assert self.input_layout is not None, "Can't set a message before calling super()"
 
         # Define the INFO box
         self.info_box = QVBoxLayout()
 
+        # If there's a header (title), create and add it
         if header:
-            header_label = QLabel(f"<b>{header}</b>")
+            header_label = QLabel(header)
             palette: QPalette = header_label.palette()
             palette.setColor(header_label.foregroundRole(), color)
             header_label.setPalette(palette)
 
             header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            header_label.setFont(self.font)
+            header_label.setFont(utils.get_font(bold=True))
 
             self.info_box.addWidget(header_label)
 
+        # create and add the message
         message_label = QLabel(message)
         message_label.setWordWrap(True)
-        message_label.setFont(self.font)
-
+        message_label.setFont(utils.get_font())
         self.info_box.addWidget(message_label)
 
+        # add everything to input layout
         self.input_layout.addStretch()
         self.input_layout.addLayout(self.info_box)
 
@@ -119,66 +154,6 @@ class IFCBaseTab(QWidget):
                     child.widget().deleteLater()
                 elif child.layout() is not None:
                     IFCBaseTab.clear_layout(child.layout())
-
-    @staticmethod
-    def set_pixmap(image: QByteArray, label: QLabel):
-        """
-        Given a QByteArray and a QLabel, it sets the image of the label.
-        """
-        pixmap = QPixmap()
-
-        pixmap.loadFromData(image)
-
-        pixmap = pixmap.scaledToHeight(utils.SPRITE_SIZE)
-
-        label.setPixmap(pixmap)
-
-    def on_image_result(self, reply: QtNetwork.QNetworkReply):
-        """
-        Called when the QNetworkAccessManager has finished downloading 1 image.
-        Checks for failed download and tries all alternatives.
-
-        :param reply:
-        :return:
-        """
-        error = reply.error()
-        url: str = reply.url().url()
-
-        if url in widgets.URL2LABEL.keys():
-            if error == QtNetwork.QNetworkReply.NetworkError.NoError:
-                labels: List[QLabel] = widgets.URL2LABEL.get(url)
-
-                bytes_string = reply.readAll()
-                for label in labels:
-                    self.set_pixmap(bytes_string, label)
-                widgets.URL2LABEL.delete(url)
-
-            else:
-                if 'black-white' in url:
-                    replace_from = 'black-white'
-                    replace_to = 'sun-moon'
-                elif 'sun-moon' in url:
-                    replace_from = 'sun-moon'
-                    replace_to = 'x-y'
-                elif 'main/CustomBattlers' in url:
-                    replace_from = 'main/CustomBattlers'
-                    replace_to = 'master/Battlers'
-                elif re.search(r'master/Battlers/\d+.\d+\.png', url):
-                    idx = url.split('/')[-1].split('.')[0]
-                    replace_from = 'master/Battlers/'
-                    replace_to = f'master/Battlers/{idx}/'
-                elif re.search(r'master/Battlers/\d+/\d+.\d+\.png', url):
-                    replace_from = 'custom'
-                    replace_to = 'autogen'
-                else:
-                    logging.warning(f"Could not find an alternative url for '{url}'")
-                    return
-
-                label = widgets.URL2LABEL.delete(url)
-                url = url.replace(replace_from, replace_to)
-                qurl = QtNetwork.QNetworkRequest(QUrl(url))
-                widgets.URL2LABEL.put(url, label)
-                self.nam.get(qurl)
 
     def add_fusions(self, fusions: List[Tuple[Pokemon, Pokemon]], order: Stat, include_reverse: bool = True):
         self.output_layout.addStretch()
@@ -204,7 +179,6 @@ class IFCBaseTab(QWidget):
 
         for p1, p2 in couples:
             widget = GridWidget(p1, p2, self.select_pokemon)
-            widget.fetch_images(self.nam)
             self.output_layout.addWidget(widget)
             self.output_layout.addStretch()
 
@@ -219,11 +193,9 @@ class IFCBaseTab(QWidget):
         # Add ab and ba fusions separately only if they are enabled
         if display_ab:
             evoline_ab_widget = GridWidget(pkmn1, pkmn2, self.select_pokemon)
-            evoline_ab_widget.fetch_images(self.nam)
             self.output_layout.addWidget(evoline_ab_widget)
         if display_ba:
             evoline_ba_widget = GridWidget(pkmn2, pkmn1, self.select_pokemon)
-            evoline_ba_widget.fetch_images(self.nam)
             self.output_layout.addWidget(evoline_ba_widget)
 
         self.output_layout.addStretch()
